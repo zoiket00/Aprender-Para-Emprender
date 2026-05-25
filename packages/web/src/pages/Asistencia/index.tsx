@@ -14,7 +14,7 @@ const OPCIONES_ASISTENCIA = [
 const OPCIONES_UBICACION = [
   { value: "", label: "—" },
   { value: "Casa", label: "Casa" },
-  { value: "CIDI", label: "CIDI" },
+  { value: "Colegio", label: "Colegio" },
   { value: "Hospital", label: "Hospital" },
   { value: "Otro", label: "Otro" },
 ];
@@ -75,7 +75,7 @@ export default function Asistencia() {
         SituacionEspecifica: "",
         Nota: f.Nota,
         Extras: "",
-        NoCidi: "",
+        NoMatricula: "",
       })),
     });
     setGuardado(true);
@@ -97,6 +97,7 @@ export default function Asistencia() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
+            <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain mix-blend-multiply shrink-0" />
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-lg font-semibold text-slate-900">Asistencia — {dia}</h1>

@@ -12,32 +12,28 @@ import {
 describe("ParticipanteSchema", () => {
   it("acepta datos válidos", () => {
     const r = ParticipanteSchema.safeParse({
-      nombre_bebe: "Sofia",
-      nombre_madre: "Ana López",
-      fase: "CIDI",
-      programa: "Buen Comienzo",
-      edad: "12",
+      nombre_completo: "Sofia Torres",
+      datos_extra: { nombre_madre: "Ana López", fase: "Aprender para Emprender", programa: "Buen Comienzo", edad: "12" },
       dias: ["Lunes", "Miercoles"],
     });
     expect(r.success).toBe(true);
   });
 
-  it("rechaza nombre_bebe vacío", () => {
-    const r = ParticipanteSchema.safeParse({ nombre_bebe: "", nombre_madre: "Ana" });
+  it("rechaza nombre_completo vacío", () => {
+    const r = ParticipanteSchema.safeParse({ nombre_completo: "x" }); // min 2 chars
     expect(r.success).toBe(false);
   });
 
-  it("rechaza nombre_madre ausente", () => {
-    const r = ParticipanteSchema.safeParse({ nombre_bebe: "Sofia" });
+  it("rechaza nombre_completo ausente", () => {
+    const r = ParticipanteSchema.safeParse({});
     expect(r.success).toBe(false);
   });
 
-  it("usa defaults para campos opcionales", () => {
-    const r = ParticipanteSchema.safeParse({ nombre_bebe: "Sofia", nombre_madre: "Ana" });
+  it("usa defaults para datos_extra opcional", () => {
+    const r = ParticipanteSchema.safeParse({ nombre_completo: "Sofia Torres" });
     expect(r.success).toBe(true);
     if (r.success) {
-      expect(r.data.fase).toBe("");
-      expect(r.data.programa).toBe("");
+      expect(r.data.datos_extra).toBeDefined();
     }
   });
 });
@@ -45,8 +41,7 @@ describe("ParticipanteSchema", () => {
 describe("ParticipanteUpdateSchema", () => {
   it("rechaza dias vacío", () => {
     const r = ParticipanteUpdateSchema.safeParse({
-      nombre_bebe: "Sofia",
-      nombre_madre: "Ana",
+      nombre_completo: "Sofia Torres",
       dias: [],
     });
     expect(r.success).toBe(false);
@@ -54,8 +49,7 @@ describe("ParticipanteUpdateSchema", () => {
 
   it("rechaza día inválido", () => {
     const r = ParticipanteUpdateSchema.safeParse({
-      nombre_bebe: "Sofia",
-      nombre_madre: "Ana",
+      nombre_completo: "Sofia Torres",
       dias: ["Sabado"],
     });
     expect(r.success).toBe(false);

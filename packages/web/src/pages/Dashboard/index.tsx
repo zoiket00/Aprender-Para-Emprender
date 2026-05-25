@@ -31,22 +31,25 @@ export default function Dashboard() {
 
   // Stats calculadas del lado cliente
   const total = registros?.length ?? 0;
-  const presentes = registros?.filter((r) => r.Asistencia === "Sí").length ?? 0;
+  const presentes = registros?.filter((r) => r.asistencia === "Sí").length ?? 0;
   const tasa = total > 0 ? Math.round((presentes / total) * 100) : 0;
-  const justificados = registros?.filter((r) => r.Asistencia === "Justificado").length ?? 0;
+  const justificados = registros?.filter((r) => r.asistencia === "Justificado").length ?? 0;
 
   const porDia: Record<string, { total: number; presentes: number }> = {};
   registros?.forEach((r) => {
-    if (!porDia[r.Dia]) porDia[r.Dia] = { total: 0, presentes: 0 };
-    porDia[r.Dia]!.total++;
-    if (r.Asistencia === "Sí") porDia[r.Dia]!.presentes++;
+    if (!porDia[r.dia]) porDia[r.dia] = { total: 0, presentes: 0 };
+    porDia[r.dia]!.total++;
+    if (r.asistencia === "Sí") porDia[r.dia]!.presentes++;
   });
 
   return (
     <div className="p-6 space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-sm text-slate-500 mt-0.5">Estadísticas de asistencia</p>
+      <div className="flex items-center gap-3">
+        <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain mix-blend-multiply shrink-0" />
+        <div>
+          <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-0.5">Estadísticas de asistencia</p>
+        </div>
       </div>
 
       {/* Filtros */}

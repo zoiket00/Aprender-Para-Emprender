@@ -8,3 +8,7 @@ dist/
 coverage/
 .expo/
 *.tsbuildinfo
+desktop.ini
+Logo/
+packages/web/src/__tests__/*.js
+packages/web/src/test/setup.js

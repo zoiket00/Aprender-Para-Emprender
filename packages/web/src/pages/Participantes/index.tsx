@@ -5,6 +5,7 @@ import {
   useCrearParticipante,
   useEditarParticipante,
   useEliminarParticipante,
+  type ParticipanteAPI,
 } from "@/hooks/useParticipantes.js";
 import { Button, Input, Modal, Spinner } from "@/components/ui/index.js";
 import type { DIAS_VALIDOS } from "@ape/shared";
@@ -13,7 +14,7 @@ type Dia = (typeof DIAS_VALIDOS)[number];
 const DIAS: Dia[] = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"];
 
 interface FormData {
-  nombre_bebe: string;
+  nombre_completo: string;
   nombre_madre: string;
   fase: string;
   programa: string;
@@ -22,11 +23,24 @@ interface FormData {
 }
 
 const FORM_EMPTY: FormData = {
-  nombre_bebe: "", nombre_madre: "", fase: "", programa: "", edad: "", dias: [],
+  nombre_completo: "", nombre_madre: "", fase: "", programa: "", edad: "", dias: [],
 };
 
+function buildPayload(form: FormData) {
+  return {
+    nombre_completo: form.nombre_completo,
+    datos_extra: {
+      nombre_madre: form.nombre_madre,
+      fase:         form.fase,
+      programa:     form.programa,
+      edad:         form.edad,
+    },
+    dias: form.dias,
+  };
+}
+
 export default function Participantes() {
-  const { data: bebes, isLoading } = useParticipantes();
+  const { data: participantes, isLoading } = useParticipantes();
   const { data: diasMap } = useAsistenciaDias();
   const crear = useCrearParticipante();
   const editar = useEditarParticipante();
@@ -38,8 +52,8 @@ export default function Participantes() {
   const [form, setForm] = useState<FormData>(FORM_EMPTY);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; nombre: string } | null>(null);
 
-  const filtrados = (bebes ?? []).filter((b) =>
-    [b.NombreBebe, b.NombreMadre, b.Fase].some((s) =>
+  const filtrados = (participantes ?? []).filter((b) =>
+    [b.nombre_completo, b.nombre_madre, b.fase].some((s) =>
       s.toLowerCase().includes(busqueda.toLowerCase())
     )
   );
@@ -51,15 +65,15 @@ export default function Participantes() {
     }));
   };
 
-  const abrirEditar = (b: (typeof filtrados)[0]) => {
+  const abrirEditar = (b: ParticipanteAPI) => {
     setEditId(b.id);
     setForm({
-      nombre_bebe: b.NombreBebe,
-      nombre_madre: b.NombreMadre,
-      fase: b.Fase,
-      programa: b.ProgramaMadre,
-      edad: b.Edad,
-      dias: (diasMap?.[b.NombreBebe] ?? []) as Dia[],
+      nombre_completo: b.nombre_completo,
+      nombre_madre:    b.nombre_madre,
+      fase:            b.fase,
+      programa:        b.programa,
+      edad:            b.edad,
+      dias:            (diasMap?.[b.id] ?? []) as Dia[],
     });
     setModal("editar");
   };
@@ -67,10 +81,11 @@ export default function Participantes() {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (form.dias.length === 0) return;
+    const payload = buildPayload(form);
     if (modal === "crear") {
-      await crear.mutateAsync(form);
+      await crear.mutateAsync(payload);
     } else if (modal === "editar" && editId) {
-      await editar.mutateAsync({ id: editId, ...form });
+      await editar.mutateAsync({ id: editId, ...payload });
     }
     setModal(null);
     setForm(FORM_EMPTY);
@@ -89,11 +104,14 @@ export default function Participantes() {
     <div className="p-6 space-y-5 animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between gap-3 flex-wrap">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900">Participantes</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            {bebes?.length ?? 0} registrados en el catálogo
-          </p>
+        <div className="flex items-center gap-3">
+          <img src="/logo.png" alt="Logo" className="h-10 w-10 object-contain mix-blend-multiply shrink-0" />
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">Participantes</h1>
+            <p className="text-sm text-slate-500 mt-0.5">
+              {participantes?.length ?? 0} registrados en el catálogo
+            </p>
+          </div>
         </div>
         <Button onClick={() => { setForm(FORM_EMPTY); setModal("crear"); }}>
           + Agregar participante
@@ -102,7 +120,7 @@ export default function Participantes() {
 
       {/* Búsqueda */}
       <Input
-        placeholder="Buscar por nombre de bebé, madre o institución..."
+        placeholder="Buscar por nombre, madre o institución..."
         value={busqueda}
         onChange={(e) => setBusqueda(e.target.value)}
       />
@@ -115,7 +133,7 @@ export default function Participantes() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Bebé</th>
+                <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Participante</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden md:table-cell">Madre</th>
                 <th className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide hidden lg:table-cell">Días</th>
                 <th className="text-right px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide">Acciones</th>
@@ -131,13 +149,13 @@ export default function Participantes() {
               ) : filtrados.map((b) => (
                 <tr key={b.id} className="hover:bg-slate-50/60 transition-colors">
                   <td className="px-4 py-3">
-                    <p className="font-medium text-slate-900">{b.NombreBebe}</p>
-                    <p className="text-xs text-slate-400">{b.Fase} · {b.Edad}m</p>
+                    <p className="font-medium text-slate-900">{b.nombre_completo}</p>
+                    <p className="text-xs text-slate-400">{b.fase} · {b.edad}m</p>
                   </td>
-                  <td className="px-4 py-3 hidden md:table-cell text-slate-600">{b.NombreMadre}</td>
+                  <td className="px-4 py-3 hidden md:table-cell text-slate-600">{b.nombre_madre}</td>
                   <td className="px-4 py-3 hidden lg:table-cell">
                     <div className="flex flex-wrap gap-1">
-                      {(diasMap?.[b.NombreBebe] ?? []).map((d) => (
+                      {(diasMap?.[b.id] ?? []).map((d) => (
                         <span key={d} className="badge-azul">{d.slice(0, 3)}</span>
                       ))}
                     </div>
@@ -154,7 +172,7 @@ export default function Participantes() {
                         </svg>
                       </button>
                       <button
-                        onClick={() => setConfirmDelete({ id: b.id, nombre: b.NombreBebe })}
+                        onClick={() => setConfirmDelete({ id: b.id, nombre: b.nombre_completo })}
                         className="p-1.5 rounded-lg hover:bg-red-50 text-slate-400 hover:text-red-600 transition-colors"
                         title="Eliminar"
                       >
@@ -191,9 +209,9 @@ export default function Participantes() {
       >
         <form id="form-participante" onSubmit={handleSubmit} className="space-y-4">
           <Input
-            label="Nombre del bebé"
-            value={form.nombre_bebe}
-            onChange={(e) => setForm((f) => ({ ...f, nombre_bebe: e.target.value }))}
+            label="Nombre del participante"
+            value={form.nombre_completo}
+            onChange={(e) => setForm((f) => ({ ...f, nombre_completo: e.target.value }))}
             required
           />
           <Input

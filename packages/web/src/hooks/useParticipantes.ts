@@ -2,20 +2,25 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api.js";
 import type { ParticipanteInput, ParticipanteUpdateInput } from "@ape/shared";
 
-interface ParticipanteAPI {
+export interface ParticipanteAPI {
   id: string;
-  NombreBebe: string;
-  NombreMadre: string;
-  Fase: string;
-  ProgramaMadre: string;
-  Edad: string;
+  nombre_completo: string;
+  nombre_madre: string;
+  fase: string;
+  programa: string;
+  edad: string;
+  codigo: string | null;
+  datos_extra: Record<string, unknown>;
+  activo: boolean;
 }
 
 export function useParticipantes() {
   return useQuery({
     queryKey: ["participantes"],
     queryFn: () =>
-      api.get<{ bebes: ParticipanteAPI[] }>("/api/participantes").then((r) => r.bebes),
+      api.get<{ ok: true; participantes: ParticipanteAPI[] }>("/api/participantes").then(
+        (r) => r.participantes
+      ),
   });
 }
 
@@ -23,9 +28,16 @@ export function useAsistenciaDias() {
   return useQuery({
     queryKey: ["asistencia-dias"],
     queryFn: () =>
-      api.get<{ diasMap: Record<string, string[]> }>("/api/participantes/asistencia-dias").then(
-        (r) => r.diasMap
-      ),
+      api.get<{ ok: true; dias: { participante_id: string; dia: string }[] }>(
+        "/api/participantes/dias-catalogo"
+      ).then((r) => {
+        const map: Record<string, string[]> = {};
+        for (const { participante_id, dia } of r.dias) {
+          if (!map[participante_id]) map[participante_id] = [];
+          map[participante_id]!.push(dia);
+        }
+        return map;
+      }),
   });
 }
 

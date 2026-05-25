@@ -3,20 +3,25 @@ import { api } from "@/lib/api.js";
 import type { GuardarAsistenciaInput } from "@ape/shared";
 
 interface RegistroAPI {
-  NombreBebe: string;
-  NombreMadre: string;
-  Fase: string;
-  ProgramaMadre: string;
-  Edad: string;
-  Fecha: string;
-  Dia: string;
-  Asistencia: string;
-  Ubicacion: string;
-  Reporte: string;
-  SituacionEspecifica: string;
-  Nota: string;
-  Extras: string;
-  NoCidi: string;
+  nombre_completo: string;
+  nombre_madre: string;
+  fase: string;
+  programa: string;
+  edad: string;
+  fecha: string;
+  dia: string;
+  asistencia: string;
+  ubicacion: string;
+  reporte: string;
+  situacion_especifica: string;
+  nota: string;
+  extras: string;
+  no_matricula: string;
+  // aliases UI (el API devuelve ambos por compatibilidad)
+  NombreBebe?: string;
+  NombreMadre?: string;
+  Asistencia?: string;
+  NoMatricula?: string;
 }
 
 interface RegistroCSV {

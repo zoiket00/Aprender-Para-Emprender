@@ -1,4 +1,4 @@
-import { type ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/store/auth.js";
 
@@ -9,7 +9,7 @@ const NAV = [
   { to: "/participantes", label: "Participantes", icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" },
 ];
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell() {
   const { user, signOut } = useAuthStore();
   const navigate = useNavigate();
 
@@ -23,14 +23,16 @@ export function AppShell({ children }: { children: ReactNode }) {
       {/* Sidebar */}
       <aside className="w-56 shrink-0 flex flex-col bg-white border-r border-slate-200">
         {/* Logo */}
-        <div className="px-5 py-5 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center shrink-0">
-              <span className="text-white font-bold text-sm">A</span>
-            </div>
+        <div className="px-5 py-4 border-b border-slate-100">
+          <div className="flex items-center gap-3">
+            <img
+              src="/logo.png"
+              alt="Logo Aprender Para Emprender"
+              className="h-10 w-10 shrink-0 object-contain mix-blend-multiply"
+            />
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-900 truncate">APE</p>
-              <p className="text-xs text-slate-400 truncate">Fundación Juanfe</p>
+              <p className="text-sm font-semibold text-slate-900 leading-tight truncate">Aprender Para Emprender</p>
+              <p className="text-[10px] text-slate-400 leading-tight truncate">Control de Asistencia</p>
             </div>
           </div>
         </div>
@@ -82,7 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       {/* Main */}
       <main className="flex-1 overflow-y-auto">
-        {children}
+        <Outlet />
       </main>
     </div>
   );

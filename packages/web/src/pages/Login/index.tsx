@@ -27,11 +27,15 @@ export default function Login() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-600 shadow-lg mb-4">
-            <span className="text-2xl font-bold text-white">A</span>
+          <div className="flex justify-center mb-4">
+            <img
+              src="/logo.png"
+              alt="Logo Aprender Para Emprender"
+              className="h-24 w-24 object-contain mix-blend-multiply"
+            />
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Aprender Para Emprender</h1>
-          <p className="mt-1 text-sm text-slate-500">Fundación Juanfe · Control de Asistencia</p>
+          <p className="mt-1 text-sm text-slate-500">Colegio Cristiano · Control de Asistencia</p>
         </div>
 
         {/* Card */}

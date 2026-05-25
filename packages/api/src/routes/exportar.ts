@@ -1,101 +1,135 @@
 import { Router } from "express";
 import XLSX from "xlsx";
 import { supabase } from "../config/supabase.js";
-import { FiltrosAsistenciaSchema } from "@ape/shared";
+import type { DatosExtra } from "@ape/shared";
 
 const router = Router();
 
-/** GET /api/exportar — genera o previsualiza Excel de registros */
+async function getOrgId(userId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("miembros_org")
+    .select("org_id")
+    .eq("usuario_id", userId)
+    .single();
+  return data?.org_id ?? null;
+}
+
+async function getOrgRole(userId: string, orgId: string): Promise<string | null> {
+  const { data } = await supabase
+    .from("miembros_org")
+    .select("rol")
+    .eq("usuario_id", userId)
+    .eq("org_id", orgId)
+    .single();
+  return data?.rol ?? null;
+}
+
+function fromDbEstado(s: string): string {
+  const map: Record<string, string> = {
+    presente:    "Sí",
+    ausente:     "No",
+    justificado: "Justificado",
+    tarde:       "Tarde",
+  };
+  return map[s] ?? "No";
+}
+
+/** GET /api/exportar — genera o previsualiza Excel */
 router.get("/", async (req, res) => {
-  const { desde, hasta, programa, fase, dia, preview } = req.query;
+  const { desde, hasta, programa, dia, preview } = req.query;
 
   if (!desde || !hasta) {
     res.status(400).json({ error: "Los parámetros desde y hasta son requeridos" });
     return;
   }
 
-  const { data: usuario } = await supabase
-    .from("usuarios")
-    .select("rol")
-    .eq("id", req.user?.id)
-    .single();
+  const orgId = await getOrgId(req.user!.id);
+  if (!orgId) { res.status(403).json({ error: "Sin organización asignada" }); return; }
 
-  if (!usuario || !["admin", "coordinadora"].includes(usuario.rol)) {
-    res.status(403).json({ error: "Solo admin y coordinadora pueden exportar registros" });
+  const rol = await getOrgRole(req.user!.id, orgId);
+  if (!rol || !["propietario", "admin", "coordinador"].includes(rol)) {
+    res.status(403).json({ error: "Solo admin y coordinador pueden exportar registros" });
     return;
   }
 
+  // Traer sesiones en el rango de fechas
+  let sessionQuery = supabase
+    .from("sesiones_asistencia")
+    .select("id, fecha, grupos!inner(nombre, programas!inner(org_id, nombre))")
+    .eq("grupos.programas.org_id", orgId)
+    .gte("fecha", desde as string)
+    .lte("fecha", hasta as string);
+
+  if (dia)      sessionQuery = sessionQuery.eq("grupos.nombre", dia as string);
+  if (programa) sessionQuery = sessionQuery.eq("grupos.programas.nombre", programa as string);
+
+  const { data: sesiones, error: sError } = await sessionQuery;
+  if (sError) { res.status(500).json({ error: sError.message }); return; }
+  if (!sesiones?.length) {
+    if (preview === "true") { res.json({ total: 0, filas: [] }); return; }
+    res.status(404).json({ error: "No hay registros para el rango indicado" });
+    return;
+  }
+
+  const sesionIds = sesiones.map((s) => (s as Record<string, unknown>)["id"] as string);
+
   const PAGE_SIZE = 1000;
-  let allData: Record<string, unknown>[] = [];
+  let allRecords: Record<string, unknown>[] = [];
   let from = 0;
 
   while (true) {
-    let q = supabase
+    const { data, error } = await supabase
       .from("registros_asistencia")
-      .select("*")
-      .gte("fecha", desde as string)
-      .lte("fecha", hasta as string)
-      .order("fecha", { ascending: true })
-      .order("dia", { ascending: true })
-      .order("nombre_bebe", { ascending: true })
+      .select("*, participantes(nombre_completo, codigo, datos_extra), sesiones_asistencia(fecha, grupos(nombre))")
+      .in("sesion_id", sesionIds)
+      .order("registrado_en", { ascending: true })
       .range(from, from + PAGE_SIZE - 1);
 
-    if (programa) q = q.eq("programa", programa as string);
-    if (fase) q = q.eq("fase", fase as string);
-    if (dia) q = q.eq("dia", dia as string);
-
-    const { data, error } = await q;
-    if (error) {
-      res.status(500).json({ error: error.message });
-      return;
-    }
-    allData = allData.concat(data ?? []);
+    if (error) { res.status(500).json({ error: error.message }); return; }
+    allRecords = allRecords.concat((data ?? []) as Record<string, unknown>[]);
     if ((data?.length ?? 0) < PAGE_SIZE) break;
     from += PAGE_SIZE;
   }
 
-  const mapearFila = (r: Record<string, unknown>) => ({
-    Fecha: r["fecha"],
-    Dia: r["dia"],
-    "Nombre Bebé": r["nombre_bebe"],
-    "Nombre Madre": r["nombre_madre"],
-    Institución: r["fase"],
-    Programa: r["programa"],
-    "Edad (meses)": r["edad"],
-    Asistencia: r["asistencia"],
-    Ubicación: r["ubicacion"],
-    Reporte: r["reporte"],
-    "Situación Específica": r["situacion_especifica"],
-    Nota: r["nota"],
-    Extras: r["extras"],
-    "No CIDI": r["no_cidi"],
-  });
+  const mapearFila = (r: Record<string, unknown>) => {
+    const p     = (r["participantes"] as Record<string, unknown>) ?? {};
+    const extra = ((p["datos_extra"] ?? {}) as DatosExtra);
+    const ses   = (r["sesiones_asistencia"] as Record<string, unknown>) ?? {};
+    const grp   = (ses["grupos"] as Record<string, unknown>) ?? {};
+    const info  = (r["info_extra"] as Record<string, unknown>) ?? {};
+
+    return {
+      "Fecha":                ses["fecha"] ?? "",
+      "Día":                  grp["nombre"] ?? "",
+      "Nombre Participante":  p["nombre_completo"] ?? "",
+      "Nombre Madre":         extra.nombre_madre ?? "",
+      "Institución":          extra.fase ?? "",
+      "Programa":             extra.programa ?? "",
+      "Edad (meses)":         extra.edad ?? "",
+      "Asistencia":           fromDbEstado(String(r["estado"] ?? "ausente")),
+      "Ubicación":            info["ubicacion"] ?? "",
+      "Reporte":              info["reporte"] ?? "",
+      "Situación Específica": info["situacion_especifica"] ?? "",
+      "Nota":                 r["nota"] ?? "",
+      "Extras":               info["extras"] ?? "",
+      "No Matrícula":         info["no_matricula"] ?? p["codigo"] ?? "",
+    };
+  };
 
   if (preview === "true") {
-    res.json({ total: allData.length, filas: allData.slice(0, 15).map(mapearFila) });
+    res.json({ total: allRecords.length, filas: allRecords.slice(0, 15).map(mapearFila) });
     return;
   }
 
-  const filas = allData.map(mapearFila);
+  const filas = allRecords.map(mapearFila);
   const ws = XLSX.utils.json_to_sheet(filas);
-
-  ws["!cols"] = [
-    { wch: 12 }, { wch: 11 }, { wch: 30 }, { wch: 30 }, { wch: 9 },
-    { wch: 24 }, { wch: 13 }, { wch: 11 }, { wch: 11 }, { wch: 9 },
-    { wch: 26 }, { wch: 20 }, { wch: 8 }, { wch: 8 },
-  ];
-
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Asistencia");
 
-  const nombreArchivo = `asistencia_${desde}_${hasta}.xlsx`;
-  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-
-  res.setHeader("Content-Disposition", `attachment; filename="${nombreArchivo}"`);
+  const buf = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
   res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-  res.send(buffer);
-
-  console.log(`✅ Exportado: ${allData.length} registros ${desde} → ${hasta}`);
+  res.setHeader("Content-Disposition", `attachment; filename="asistencia-${desde}-${hasta}.xlsx"`);
+  res.send(buf);
 });
 
 export default router;

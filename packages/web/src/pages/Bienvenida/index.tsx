@@ -22,11 +22,18 @@ export default function Bienvenida() {
 
   return (
     <div className="p-8 max-w-2xl mx-auto animate-fade-in">
-      {/* Saludo */}
-      <div className="mb-8">
-        <p className="text-sm text-slate-500 mb-1">{saludo} 👋</p>
-        <h1 className="text-2xl font-bold text-slate-900 capitalize">{nombre}</h1>
-        <p className="mt-1 text-slate-500">¿Qué día vas a registrar hoy?</p>
+      {/* Logo + Saludo */}
+      <div className="flex items-center gap-5 mb-8">
+        <img
+          src="/logo.png"
+          alt="Logo Aprender Para Emprender"
+          className="h-16 w-16 object-contain mix-blend-multiply shrink-0"
+        />
+        <div>
+          <p className="text-sm text-slate-500 mb-0.5">{saludo} 👋</p>
+          <h1 className="text-2xl font-bold text-slate-900 capitalize">{nombre}</h1>
+          <p className="mt-0.5 text-slate-500 text-sm">¿Qué día vas a registrar hoy?</p>
+        </div>
       </div>
 
       {/* Selector de días */}

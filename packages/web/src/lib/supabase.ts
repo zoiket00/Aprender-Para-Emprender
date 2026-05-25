@@ -6,13 +6,15 @@ async function fetchConfig() {
   return res.json() as Promise<{ url: string; anonKey: string }>;
 }
 
-let _supabase: ReturnType<typeof createClient> | null = null;
+let _promise: Promise<ReturnType<typeof createClient>> | null = null;
 
-export async function getSupabase() {
-  if (_supabase) return _supabase;
-  const { url, anonKey } = await fetchConfig();
-  _supabase = createClient(url, anonKey, {
-    auth: { persistSession: true, autoRefreshToken: true },
-  });
-  return _supabase;
+export function getSupabase() {
+  if (!_promise) {
+    _promise = fetchConfig().then(({ url, anonKey }) =>
+      createClient(url, anonKey, {
+        auth: { persistSession: true, autoRefreshToken: true },
+      })
+    );
+  }
+  return _promise;
 }

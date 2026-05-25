@@ -1,5 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
-import { Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, Outlet } from "react-router-dom";
 import { useAuthStore } from "./store/auth.js";
 import { AppShell } from "./components/layout/AppShell.js";
 import { Spinner } from "./components/ui/index.js";
@@ -18,52 +18,34 @@ function Loader() {
   );
 }
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute() {
   const { user, initialized } = useAuthStore();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  useEffect(() => {
-    if (initialized && !user) {
-      navigate("/login", { state: { from: location }, replace: true });
-    }
-  }, [initialized, user, navigate, location]);
-
   if (!initialized) return <Loader />;
-  if (!user) return null;
-  return <>{children}</>;
+  if (!user) return <Navigate to="/login" replace />;
+  return <Outlet />;
 }
 
 export default function App() {
-  const { initialize, initialized } = useAuthStore();
+  const { initialize } = useAuthStore();
 
   useEffect(() => {
-    initialize();
+    initialize().catch(() => {});
   }, [initialize]);
-
-  if (!initialized) return <Loader />;
 
   return (
     <Suspense fallback={<Loader />}>
       <Routes>
         <Route path="/login" element={<Login />} />
 
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppShell>
-                <Routes>
-                  <Route index element={<Navigate to="/bienvenida" replace />} />
-                  <Route path="bienvenida"    element={<Bienvenida />} />
-                  <Route path="asistencia"    element={<Asistencia />} />
-                  <Route path="dashboard"     element={<Dashboard />} />
-                  <Route path="participantes" element={<Participantes />} />
-                </Routes>
-              </AppShell>
-            </ProtectedRoute>
-          }
-        />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppShell />}>
+            <Route index element={<Navigate to="/bienvenida" replace />} />
+            <Route path="/bienvenida"    element={<Bienvenida />} />
+            <Route path="/asistencia"    element={<Asistencia />} />
+            <Route path="/dashboard"     element={<Dashboard />} />
+            <Route path="/participantes" element={<Participantes />} />
+          </Route>
+        </Route>
 
         <Route path="*" element={<Navigate to="/bienvenida" replace />} />
       </Routes>
