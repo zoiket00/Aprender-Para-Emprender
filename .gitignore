@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+*.xlsx
+*.csv
+.turbo/
+coverage/
+.expo/
+*.tsbuildinfo

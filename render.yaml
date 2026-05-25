@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: ape-api
+    runtime: node
+    rootDir: packages/api
+    buildCommand: cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @ape/shared build && pnpm --filter @ape/api build
+    startCommand: node dist/index.js
+    plan: free
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false
+    healthCheckPath: /health

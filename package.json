@@ -1,0 +1,25 @@
+{
+  "name": "aprender-para-emprender",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "dev:api": "turbo run dev --filter=@ape/api",
+    "dev:web": "turbo run dev --filter=@ape/web"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0"
+  },
+  "workspaces": [
+    "packages/*"
+  ]
+}

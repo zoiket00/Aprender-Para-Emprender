@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Aprender Para Emprender",
+    "slug": "aprender-para-emprender",
+    "version": "1.0.0",
+    "scheme": "ape",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#2563EB"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.juanfe.ape"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#2563EB"
+      },
+      "package": "com.juanfe.ape"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
