@@ -60,7 +60,7 @@ export default function Dashboard() {
             type="date"
             value={desde}
             onChange={(e) => { setDesde(e.target.value); setAplicado(false); }}
-            className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-brand-500"
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -69,7 +69,7 @@ export default function Dashboard() {
             type="date"
             value={hasta}
             onChange={(e) => { setHasta(e.target.value); setAplicado(false); }}
-            className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+            className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-brand-500"
           />
         </div>
         <div className="flex flex-col gap-1.5">
@@ -77,7 +77,7 @@ export default function Dashboard() {
           <select
             value={diaFiltro}
             onChange={(e) => { setDiaFiltro(e.target.value); setAplicado(false); }}
-            className="h-9 rounded-lg border border-slate-200 px-3 text-sm bg-white focus:ring-2 focus:ring-blue-500"
+            className="h-9 rounded-lg border border-slate-200 px-3 text-sm bg-white focus:ring-2 focus:ring-brand-500"
           >
             <option value="">Todos</option>
             {DIAS.map((d) => <option key={d} value={d}>{d}</option>)}
@@ -117,7 +117,7 @@ export default function Dashboard() {
             </div>
             <div className="stat-card">
               <p className="text-xs font-medium text-slate-500">Tasa asistencia</p>
-              <p className="text-3xl font-bold text-blue-600">{tasa}%</p>
+              <p className="text-3xl font-bold text-brand-500">{tasa}%</p>
             </div>
             <div className="stat-card">
               <p className="text-xs font-medium text-slate-500">Justificados</p>
@@ -138,7 +138,7 @@ export default function Dashboard() {
                       <span className="w-20 text-sm text-slate-600 shrink-0">{d}</span>
                       <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-blue-500 rounded-full transition-all"
+                          className="h-full bg-brand-500 rounded-full transition-all"
                           style={{ width: `${pct}%` }}
                         />
                       </div>

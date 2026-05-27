@@ -24,7 +24,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           className={[
             "h-9 w-full rounded-lg border px-3 text-sm text-slate-900 bg-white",
             "transition-colors duration-150 cursor-pointer",
-            "focus:ring-2 focus:ring-blue-500 focus:border-blue-500",
+            "focus:ring-2 focus:ring-brand-500 focus:border-brand-500",
             error ? "border-red-400" : "border-slate-200 hover:border-slate-300",
             className,
           ].join(" ")}

@@ -164,7 +164,7 @@ export default function Participantes() {
                     <div className="flex items-center justify-end gap-1.5">
                       <button
                         onClick={() => abrirEditar(b)}
-                        className="p-1.5 rounded-lg hover:bg-blue-50 text-slate-400 hover:text-blue-600 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-brand-50 text-slate-400 hover:text-brand-600 transition-colors"
                         title="Editar"
                       >
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -256,8 +256,8 @@ export default function Participantes() {
                   className={[
                     "px-3 py-1.5 rounded-lg text-xs font-medium border transition-all",
                     form.dias.includes(d)
-                      ? "bg-blue-600 border-blue-600 text-white"
-                      : "bg-white border-slate-200 text-slate-600 hover:border-blue-300",
+                      ? "bg-brand-500 border-brand-500 text-white"
+                      : "bg-white border-slate-200 text-slate-600 hover:border-brand-300",
                   ].join(" ")}
                 >
                   {d}

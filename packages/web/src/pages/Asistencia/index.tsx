@@ -114,7 +114,7 @@ export default function Asistencia() {
               type="date"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
-              className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-blue-500"
+              className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-brand-500"
             />
             {!DIAS.includes(dia) && (
               <Select
@@ -183,7 +183,7 @@ export default function Asistencia() {
                         onChange={(e) => updateFila(i, "Asistencia", e.target.value)}
                         className={[
                           "h-8 rounded-lg border px-2 text-xs font-medium cursor-pointer",
-                          "focus:ring-2 focus:ring-blue-500 transition-colors",
+                          "focus:ring-2 focus:ring-brand-500 transition-colors",
                           fila.Asistencia === "Sí"
                             ? "bg-emerald-50 border-emerald-200 text-emerald-700"
                             : fila.Asistencia === "Justificado"
@@ -200,7 +200,7 @@ export default function Asistencia() {
                       <select
                         value={fila.Ubicacion}
                         onChange={(e) => updateFila(i, "Ubicacion", e.target.value)}
-                        className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-600 focus:ring-2 focus:ring-blue-500"
+                        className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-600 focus:ring-2 focus:ring-brand-500"
                       >
                         {OPCIONES_UBICACION.map((o) => (
                           <option key={o.value} value={o.value}>{o.label}</option>
@@ -213,7 +213,7 @@ export default function Asistencia() {
                         value={fila.Nota}
                         onChange={(e) => updateFila(i, "Nota", e.target.value)}
                         placeholder="Observación..."
-                        className="h-8 w-full rounded-lg border border-slate-200 px-2 text-xs text-slate-600 focus:ring-2 focus:ring-blue-500 bg-transparent"
+                        className="h-8 w-full rounded-lg border border-slate-200 px-2 text-xs text-slate-600 focus:ring-2 focus:ring-brand-500 bg-transparent"
                       />
                     </td>
                   </tr>

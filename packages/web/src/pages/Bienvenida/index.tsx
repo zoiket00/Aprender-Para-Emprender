@@ -5,7 +5,7 @@ const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"] as const;
 
 const DIA_CONFIG = {
   Lunes:     { color: "bg-violet-50 border-violet-200 hover:bg-violet-100 text-violet-800", dot: "bg-violet-500" },
-  Martes:    { color: "bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-800",         dot: "bg-blue-500" },
+  Martes:    { color: "bg-brand-50 border-brand-200 hover:bg-brand-100 text-brand-700",      dot: "bg-brand-500" },
   Miercoles: { color: "bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-800", dot: "bg-emerald-500" },
   Jueves:    { color: "bg-amber-50 border-amber-200 hover:bg-amber-100 text-amber-800",     dot: "bg-amber-500" },
   Viernes:   { color: "bg-rose-50 border-rose-200 hover:bg-rose-100 text-rose-800",         dot: "bg-rose-500" },
@@ -70,7 +70,7 @@ export default function Bienvenida() {
       <div className="mt-8 grid grid-cols-2 gap-3">
         <button
           onClick={() => navigate("/dashboard")}
-          className="card p-4 text-left hover:border-blue-200 hover:shadow-md transition-all group"
+          className="card p-4 text-left hover:border-brand-200 hover:shadow-md transition-all group"
         >
           <p className="text-2xl mb-2">📊</p>
           <p className="font-medium text-slate-800 text-sm">Dashboard</p>
@@ -78,7 +78,7 @@ export default function Bienvenida() {
         </button>
         <button
           onClick={() => navigate("/participantes")}
-          className="card p-4 text-left hover:border-blue-200 hover:shadow-md transition-all group"
+          className="card p-4 text-left hover:border-brand-200 hover:shadow-md transition-all group"
         >
           <p className="text-2xl mb-2">👶</p>
           <p className="font-medium text-slate-800 text-sm">Participantes</p>

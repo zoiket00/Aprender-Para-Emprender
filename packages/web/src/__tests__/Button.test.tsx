@@ -11,7 +11,7 @@ describe("Button", () => {
 
   it("aplica la variante primary por defecto", () => {
     render(<Button>Click</Button>);
-    expect(screen.getByRole("button")).toHaveClass("bg-blue-600");
+    expect(screen.getByRole("button")).toHaveClass("bg-brand-500");
   });
 
   it("muestra spinner cuando loading=true", () => {
@@ -51,6 +51,6 @@ describe("Button", () => {
   it("aplica className adicional sin romper las clases base", () => {
     render(<Button className="w-full">Completo</Button>);
     expect(screen.getByRole("button")).toHaveClass("w-full");
-    expect(screen.getByRole("button")).toHaveClass("bg-blue-600");
+    expect(screen.getByRole("button")).toHaveClass("bg-brand-500");
   });
 });

@@ -23,7 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           className={[
             "h-9 w-full rounded-lg border px-3 text-sm text-slate-900 placeholder:text-slate-400",
             "transition-colors duration-150",
-            "focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:border-blue-500",
+            "focus:ring-2 focus:ring-brand-500 focus:ring-offset-0 focus:border-brand-500",
             error
               ? "border-red-400 bg-red-50 focus:ring-red-400"
               : "border-slate-200 bg-white hover:border-slate-300",

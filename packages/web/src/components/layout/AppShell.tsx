@@ -47,7 +47,7 @@ export function AppShell() {
                 [
                   "flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all duration-150",
                   isActive
-                    ? "bg-blue-50 text-blue-700 font-medium"
+                    ? "bg-brand-50 text-brand-600 font-medium"
                     : "text-slate-600 hover:bg-slate-50 hover:text-slate-900",
                 ].join(" ")
               }
