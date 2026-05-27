@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @ape/shared build && pnpm --filter @ape/web build",
+  "outputDirectory": "dist",
+  "installCommand": "echo skip"
+}

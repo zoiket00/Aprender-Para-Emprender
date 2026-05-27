@@ -1,5 +1,7 @@
 import { getSupabase } from "./supabase.js";
 
+const API_BASE = (import.meta as { env?: Record<string, string> }).env?.["VITE_API_URL"] ?? "";
+
 async function getToken(): Promise<string> {
   const supabase = await getSupabase();
   const { data } = await supabase.auth.getSession();
@@ -11,7 +13,7 @@ async function request<T>(
   options: RequestInit = {}
 ): Promise<T> {
   const token = await getToken();
-  const res = await fetch(path, {
+  const res = await fetch(`${API_BASE}${path}`, {
     ...options,
     headers: {
       "Content-Type": "application/json",
