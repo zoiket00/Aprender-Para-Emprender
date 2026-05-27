@@ -1,5 +1,8 @@
 {
   "buildCommand": "cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @ape/shared build && pnpm --filter @ape/web build",
   "outputDirectory": "dist",
-  "installCommand": "echo skip"
+  "installCommand": "echo skip",
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "https://aprender-para-emprender.onrender.com/api/$1" }
+  ]
 }
