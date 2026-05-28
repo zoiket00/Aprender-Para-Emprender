@@ -6,6 +6,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import {
   useParticipantes, useAsistenciaDias, useCrearParticipante,
   useEditarParticipante, useEliminarParticipante,
+  type ParticipanteAPI,
 } from "@/hooks/useParticipantes";
 import { Button, Input, Spinner } from "@/components/ui";
 import { colors, spacing, fontSize, radius } from "@/theme";
@@ -21,7 +22,7 @@ interface FormData {
 const EMPTY: FormData = { nombre_bebe: "", nombre_madre: "", fase: "", programa: "", edad: "", dias: [] };
 
 export default function Participantes() {
-  const { data: bebes, isLoading } = useParticipantes();
+  const { data: participantes, isLoading } = useParticipantes();
   const { data: diasMap } = useAsistenciaDias();
   const crear  = useCrearParticipante();
   const editar = useEditarParticipante();
@@ -32,8 +33,8 @@ export default function Participantes() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
 
-  const filtrados = (bebes ?? []).filter((b) =>
-    [b.NombreBebe, b.NombreMadre, b.Fase].some((s) =>
+  const filtrados = (participantes ?? []).filter((b) =>
+    [b.nombre_completo, b.nombre_madre, b.fase].some((s) =>
       s.toLowerCase().includes(busqueda.toLowerCase())
     )
   );
@@ -44,21 +45,31 @@ export default function Participantes() {
       dias: f.dias.includes(d) ? f.dias.filter((x) => x !== d) : [...f.dias, d],
     }));
 
-  const abrirEditar = (b: typeof filtrados[0]) => {
+  const abrirEditar = (b: ParticipanteAPI) => {
     setEditId(b.id);
     setForm({
-      nombre_bebe: b.NombreBebe, nombre_madre: b.NombreMadre,
-      fase: b.Fase, programa: b.ProgramaMadre, edad: b.Edad,
-      dias: (diasMap?.[b.NombreBebe] ?? []) as Dia[],
+      nombre_bebe:  b.nombre_completo,
+      nombre_madre: b.nombre_madre,
+      fase:         b.fase,
+      programa:     b.programa,
+      edad:         b.edad,
+      dias:         (diasMap?.[b.id] ?? []) as Dia[],
     });
     setModal("editar");
   };
 
+  const buildPayload = (f: FormData) => ({
+    nombre_completo: f.nombre_bebe,
+    datos_extra: { nombre_madre: f.nombre_madre, fase: f.fase, programa: f.programa, edad: f.edad },
+    dias: f.dias,
+  });
+
   const handleSubmit = async () => {
     if (form.dias.length === 0) { Alert.alert("Error", "Selecciona al menos un día"); return; }
     if (!form.nombre_bebe || !form.nombre_madre) { Alert.alert("Error", "Nombre del bebé y madre son obligatorios"); return; }
-    if (modal === "crear") await crear.mutateAsync(form);
-    else if (editId) await editar.mutateAsync({ id: editId, ...form });
+    const payload = buildPayload(form);
+    if (modal === "crear") await crear.mutateAsync(payload);
+    else if (editId) await editar.mutateAsync({ id: editId, ...payload });
     setModal(null); setForm(EMPTY); setEditId(null);
   };
 
@@ -75,7 +86,7 @@ export default function Participantes() {
       <View style={styles.header}>
         <View>
           <Text style={styles.title}>Participantes</Text>
-          <Text style={styles.subtitle}>{bebes?.length ?? 0} registrados</Text>
+          <Text style={styles.subtitle}>{participantes?.length ?? 0} registrados</Text>
         </View>
         <Button label="+ Agregar" size="sm" onPress={() => { setForm(EMPTY); setModal("crear"); }} />
       </View>
@@ -99,10 +110,10 @@ export default function Participantes() {
           renderItem={({ item: b }) => (
             <View style={styles.fila}>
               <View style={styles.filaInfo}>
-                <Text style={styles.filaNombre}>{b.NombreBebe}</Text>
-                <Text style={styles.filaMadre}>{b.NombreMadre}</Text>
+                <Text style={styles.filaNombre}>{b.nombre_completo}</Text>
+                <Text style={styles.filaMadre}>{b.nombre_madre}</Text>
                 <View style={styles.diasRow}>
-                  {(diasMap?.[b.NombreBebe] ?? []).map((d) => (
+                  {(diasMap?.[b.id] ?? []).map((d) => (
                     <View key={d} style={styles.diasBadge}>
                       <Text style={styles.diasBadgeText}>{d.slice(0, 3)}</Text>
                     </View>
@@ -113,7 +124,7 @@ export default function Participantes() {
                 <TouchableOpacity onPress={() => abrirEditar(b)} style={styles.btn}>
                   <Text style={styles.btnEdit}>✏️</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => confirmarEliminar(b.id, b.NombreBebe)} style={styles.btn}>
+                <TouchableOpacity onPress={() => confirmarEliminar(b.id, b.nombre_completo)} style={styles.btn}>
                   <Text style={styles.btnDelete}>🗑️</Text>
                 </TouchableOpacity>
               </View>

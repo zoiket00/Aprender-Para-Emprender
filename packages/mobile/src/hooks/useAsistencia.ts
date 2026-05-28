@@ -14,16 +14,18 @@ export interface RegistroCSV {
 }
 
 export interface RegistroAPI {
+  // Campos canónicos del API
+  nombre_completo: string;
+  nombre_madre: string;
+  fase: string;
+  fecha: string;
+  dia: string;
+  asistencia: string;
+  nota: string;
+  // Aliases uppercase que el API también devuelve por compatibilidad
   NombreBebe: string;
   NombreMadre: string;
-  Fase: string;
-  ProgramaMadre: string;
-  Fecha: string;
-  Dia: string;
   Asistencia: string;
-  Ubicacion: string;
-  Reporte: string;
-  Nota: string;
 }
 
 function parseCsv(csv: string): RegistroCSV[] {

@@ -119,11 +119,6 @@ router.get("/dias-catalogo", async (req, res) => {
   res.json({ ok: true, dias });
 });
 
-// ── GET /asistencia-dias — alias para compatibilidad ─────────────────────────
-router.get("/asistencia-dias", async (_req, res) => {
-  res.json({ ok: true, dias: [] });
-});
-
 // ── POST / — crear participante + inscribir en días ──────────────────────────
 router.post("/", async (req, res) => {
   const parsed = ParticipanteSchema.safeParse(req.body);

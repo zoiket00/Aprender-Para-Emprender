@@ -28,9 +28,9 @@ export default function Dashboard() {
 
   const porDia: Record<string, { total: number; presentes: number }> = {};
   registros?.forEach((r) => {
-    if (!porDia[r.Dia]) porDia[r.Dia] = { total: 0, presentes: 0 };
-    porDia[r.Dia]!.total++;
-    if (r.Asistencia === "Sí") porDia[r.Dia]!.presentes++;
+    if (!porDia[r.dia]) porDia[r.dia] = { total: 0, presentes: 0 };
+    porDia[r.dia]!.total++;
+    if (r.Asistencia === "Sí") porDia[r.dia]!.presentes++;
   });
 
   return (
