@@ -3,7 +3,7 @@ services:
     name: ape-api
     runtime: node
     rootDir: packages/api
-    buildCommand: cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @ape/shared build && pnpm --filter @ape/api build
+    buildCommand: cd ../.. && pnpm install --frozen-lockfile && pnpm --filter @ape/shared build && pnpm --filter @ape/web build && pnpm --filter @ape/api build
     startCommand: node dist/index.js
     plan: free
     envVars:

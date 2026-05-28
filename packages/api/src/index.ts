@@ -7,7 +7,7 @@ const app = createApp();
 
 async function main() {
   const { count, error } = await supabase
-    .from("bebes")
+    .from("participantes")
     .select("id", { count: "exact", head: true });
 
   if (error) {
