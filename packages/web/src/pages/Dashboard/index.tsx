@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAsistencia } from "@/hooks/useAsistencia.js";
+import { api } from "@/lib/api.js";
 import { Button, Spinner } from "@/components/ui/index.js";
 
 const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"];
@@ -18,15 +19,31 @@ export default function Dashboard() {
   const [hasta, setHasta] = useState(hoy());
   const [diaFiltro, setDiaFiltro] = useState("");
   const [aplicado, setAplicado] = useState(false);
+  const [exportando, setExportando] = useState(false);
+  const [exportError, setExportError] = useState("");
 
   const filtros = aplicado ? { desde, hasta, ...(diaFiltro ? { dia: diaFiltro } : {}) } : {};
   const { data: registros, isLoading } = useAsistencia(filtros);
 
   const handleAplicar = () => setAplicado(true);
 
-  const handleExportar = () => {
-    const params = new URLSearchParams({ desde, hasta, ...(diaFiltro ? { dia: diaFiltro } : {}) });
-    window.open(`/api/exportar?${params}`, "_blank");
+  const handleExportar = async () => {
+    setExportando(true);
+    setExportError("");
+    try {
+      const params = new URLSearchParams({ desde, hasta, ...(diaFiltro ? { dia: diaFiltro } : {}) });
+      const blob = await api.download(`/api/exportar?${params}`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `asistencia-${desde}-${hasta}.xlsx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setExportError(err instanceof Error ? err.message : "Error al exportar");
+    } finally {
+      setExportando(false);
+    }
   };
 
   // Stats calculadas del lado cliente
@@ -85,11 +102,16 @@ export default function Dashboard() {
         </div>
         <Button onClick={handleAplicar}>Buscar</Button>
         {aplicado && total > 0 && (
-          <Button variant="secondary" onClick={handleExportar}>
+          <Button variant="secondary" onClick={handleExportar} loading={exportando}>
             ↓ Exportar Excel
           </Button>
         )}
       </div>
+      {exportError && (
+        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+          {exportError}
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-20"><Spinner size="lg" /></div>

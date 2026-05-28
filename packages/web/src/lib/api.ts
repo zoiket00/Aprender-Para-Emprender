@@ -38,4 +38,16 @@ export const api = {
       method: "DELETE",
       ...(data ? { body: JSON.stringify(data) } : {}),
     }),
+
+  download: async (path: string): Promise<Blob> => {
+    const token = await getToken();
+    const res = await fetch(`${API_BASE}${path}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error((body as { error: string }).error ?? "Error al descargar");
+    }
+    return res.blob();
+  },
 };
