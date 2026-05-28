@@ -195,9 +195,36 @@ router.put("/:id", async (req, res) => {
 
   if (uError) { res.status(500).json({ error: uError.message }); return; }
 
-  // Reinscribir en días
-  await supabase.from("inscripciones").delete().eq("participante_id", participanteId);
-  for (const dia of dias) {
+  // Obtener inscripciones activas actuales con nombre del grupo
+  const { data: activas } = await supabase
+    .from("inscripciones")
+    .select("id, grupo_id, grupos!inner(nombre)")
+    .eq("participante_id", participanteId)
+    .is("salida_en", null);
+
+  const diasActuales = new Map(
+    (activas ?? []).map((i) => {
+      const g = (i as Record<string, unknown>)["grupos"] as Record<string, unknown>;
+      return [String(g["nombre"]), String((i as Record<string, unknown>)["id"])];
+    })
+  );
+
+  const diasNuevos = new Set(dias);
+
+  // Soft-delete: cerrar inscripciones de días que ya no están
+  const idsACerrar = [...diasActuales.entries()]
+    .filter(([dia]) => !diasNuevos.has(dia as (typeof dias)[number]))
+    .map(([, id]) => id);
+
+  if (idsACerrar.length > 0) {
+    await supabase
+      .from("inscripciones")
+      .update({ salida_en: new Date().toISOString().split("T")[0] })
+      .in("id", idsACerrar);
+  }
+
+  // Insertar solo los días nuevos que no están activos ya
+  for (const dia of dias.filter((d) => !diasActuales.has(d))) {
     const { data: grupo } = await supabase
       .from("grupos")
       .select("id, programas!inner(org_id)")

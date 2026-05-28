@@ -113,7 +113,7 @@ export default function Asistencia() {
             <input
               type="date"
               value={fecha}
-              onChange={(e) => setFecha(e.target.value)}
+              onChange={(e) => { setFecha(e.target.value); setGuardado(false); }}
               className="h-9 rounded-lg border border-slate-200 px-3 text-sm focus:ring-2 focus:ring-brand-500"
             />
             {!DIAS.includes(dia) && (
