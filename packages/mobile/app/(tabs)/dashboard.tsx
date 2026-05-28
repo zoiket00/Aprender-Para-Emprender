@@ -8,13 +8,50 @@ import { colors, spacing, fontSize, radius } from "@/theme";
 const DIAS = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"];
 
 function hoy() { return new Date().toISOString().split("T")[0] ?? ""; }
-function primerDiaMes() {
+function primerDiaMes(offset = 0) {
   const d = new Date();
+  d.setMonth(d.getMonth() + offset, 1);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-01`;
 }
+function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0] ?? dateStr;
+}
+function fmtFecha(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("es-ES", { day: "2-digit", month: "short" });
+}
+
+const PRESETS = [
+  { label: "Este mes",  desde: () => primerDiaMes(0),  hasta: () => hoy() },
+  { label: "Mes ant.",  desde: () => primerDiaMes(-1), hasta: () => primerDiaMes(0) },
+];
+
+function DateStepper({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <View style={stepperStyles.row}>
+      <TouchableOpacity onPress={() => onChange(shiftDate(value, -7))} style={stepperStyles.btn}>
+        <Text style={stepperStyles.arrow}>‹</Text>
+      </TouchableOpacity>
+      <Text style={stepperStyles.value}>{fmtFecha(value)}</Text>
+      <TouchableOpacity onPress={() => onChange(shiftDate(value, 7))} style={stepperStyles.btn}>
+        <Text style={stepperStyles.arrow}>›</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+const stepperStyles = StyleSheet.create({
+  row:   { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  btn:   { width: 32, height: 32, alignItems: "center", justifyContent: "center",
+           borderRadius: radius.md, backgroundColor: colors.slate100 },
+  arrow: { fontSize: 20, color: colors.text, lineHeight: 24 },
+  value: { fontSize: fontSize.base, fontWeight: "600", color: colors.text, minWidth: 72, textAlign: "center" },
+});
 
 export default function Dashboard() {
-  const [desde, setDesde] = useState(primerDiaMes());
+  const [desde, setDesde] = useState(primerDiaMes(0));
   const [hasta, setHasta] = useState(hoy());
   const [aplicado, setAplicado] = useState(false);
 
@@ -41,10 +78,32 @@ export default function Dashboard() {
 
         {/* Filtros */}
         <Card style={styles.filtrosCard}>
-          <Text style={styles.label}>Desde</Text>
-          <Text style={styles.dateText}>{desde}</Text>
-          <Text style={[styles.label, { marginTop: spacing.md }]}>Hasta</Text>
-          <Text style={styles.dateText}>{hasta}</Text>
+          {/* Presets rápidos */}
+          <View style={styles.presetsRow}>
+            {PRESETS.map((p) => (
+              <TouchableOpacity
+                key={p.label}
+                onPress={() => { setDesde(p.desde()); setHasta(p.hasta()); setAplicado(false); }}
+                style={styles.presetChip}
+              >
+                <Text style={styles.presetText}>{p.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Steppers */}
+          <View style={styles.dateRow}>
+            <View style={styles.datePicker}>
+              <Text style={styles.label}>Desde</Text>
+              <DateStepper value={desde} onChange={(v) => { setDesde(v); setAplicado(false); }} />
+            </View>
+            <View style={styles.dateSep} />
+            <View style={styles.datePicker}>
+              <Text style={styles.label}>Hasta</Text>
+              <DateStepper value={hasta} onChange={(v) => { setHasta(v); setAplicado(false); }} />
+            </View>
+          </View>
+
           <Button
             label="Buscar"
             onPress={() => setAplicado(true)}
@@ -118,8 +177,14 @@ const styles = StyleSheet.create({
   title:       { fontSize: fontSize["2xl"], fontWeight: "700", color: colors.text },
   subtitle:    { fontSize: fontSize.sm, color: colors.textMuted },
   filtrosCard: { padding: spacing.lg },
-  label:       { fontSize: fontSize.xs, fontWeight: "600", color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.5 },
-  dateText:    { fontSize: fontSize.base, color: colors.text, marginTop: 4, fontWeight: "500" },
+  label:       { fontSize: fontSize.xs, fontWeight: "600", color: colors.textMuted, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: spacing.xs },
+  presetsRow:  { flexDirection: "row", gap: spacing.sm, marginBottom: spacing.lg },
+  presetChip:  { paddingVertical: 6, paddingHorizontal: spacing.md, borderRadius: radius.full,
+                 backgroundColor: colors.brandLight, borderWidth: 1, borderColor: colors.brand + "33" },
+  presetText:  { fontSize: fontSize.xs, fontWeight: "600", color: colors.brand },
+  dateRow:     { flexDirection: "row", alignItems: "flex-start", gap: spacing.md },
+  datePicker:  { flex: 1 },
+  dateSep:     { width: 1, backgroundColor: colors.border, marginTop: spacing.lg, alignSelf: "stretch" },
   empty:       { alignItems: "center", paddingVertical: spacing["4xl"] },
   emptyEmoji:  { fontSize: 40, marginBottom: spacing.lg },
   emptyText:   { fontSize: fontSize.base, color: colors.textMuted },

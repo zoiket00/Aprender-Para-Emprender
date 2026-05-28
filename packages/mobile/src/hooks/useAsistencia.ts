@@ -75,6 +75,28 @@ export function useAsistencia(filtros: Record<string, string>) {
   });
 }
 
+export function useAsistenciaFechas() {
+  return useQuery({
+    queryKey: ["asistencia-fechas"],
+    queryFn: () =>
+      api
+        .get<{ fechas: { fecha: string; dia: string }[] }>("/api/asistencia/fechas")
+        .then((r) => r.fechas),
+  });
+}
+
+export function useEliminarDia() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ fecha, dia }: { fecha: string; dia: string }) =>
+      api.delete<{ ok: boolean }>("/api/asistencia/dia", { fecha, dia }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["asistencia"] });
+      qc.invalidateQueries({ queryKey: ["asistencia-fechas"] });
+    },
+  });
+}
+
 export function useGuardarAsistencia() {
   const qc = useQueryClient();
   return useMutation({

@@ -9,6 +9,7 @@ const Bienvenida    = lazy(() => import("./pages/Bienvenida/index.js"));
 const Asistencia    = lazy(() => import("./pages/Asistencia/index.js"));
 const Dashboard     = lazy(() => import("./pages/Dashboard/index.js"));
 const Participantes = lazy(() => import("./pages/Participantes/index.js"));
+const Historial     = lazy(() => import("./pages/Historial/index.js"));
 
 function Loader() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
             <Route path="/asistencia"    element={<Asistencia />} />
             <Route path="/dashboard"     element={<Dashboard />} />
             <Route path="/participantes" element={<Participantes />} />
+            <Route path="/historial"     element={<Historial />} />
           </Route>
         </Route>
 

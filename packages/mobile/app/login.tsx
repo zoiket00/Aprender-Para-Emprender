@@ -47,7 +47,7 @@ export default function Login() {
             <Text style={styles.logoText}>A</Text>
           </View>
           <Text style={styles.appName}>Aprender Para Emprender</Text>
-          <Text style={styles.subtitle}>Fundación Juanfe · Control de Asistencia</Text>
+          <Text style={styles.subtitle}>Colegio Cristiano Aprender para Emprender · Control de Asistencia</Text>
         </View>
 
         {/* Form */}

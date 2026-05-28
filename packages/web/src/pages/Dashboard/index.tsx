@@ -59,6 +59,20 @@ export default function Dashboard() {
     if (r.asistencia === "Sí") porDia[r.dia]!.presentes++;
   });
 
+  interface PartStat { nombre: string; total: number; presentes: number; ausentes: number }
+  const porParticipante: Record<string, PartStat> = {};
+  registros?.forEach((r) => {
+    const k = r.nombre_completo;
+    if (!porParticipante[k]) porParticipante[k] = { nombre: k, total: 0, presentes: 0, ausentes: 0 };
+    porParticipante[k]!.total++;
+    if (r.asistencia === "Sí") porParticipante[k]!.presentes++;
+    else if (r.asistencia === "No") porParticipante[k]!.ausentes++;
+  });
+  const topAusentes = Object.values(porParticipante)
+    .filter((p) => p.ausentes > 0)
+    .sort((a, b) => b.ausentes - a.ausentes)
+    .slice(0, 10);
+
   return (
     <div className="p-6 space-y-6 animate-fade-in">
       <div className="flex items-center gap-3">
@@ -166,6 +180,45 @@ export default function Dashboard() {
                       </div>
                       <span className="text-xs text-slate-500 w-16 text-right shrink-0">
                         {s.presentes}/{s.total} ({pct}%)
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Top ausentes */}
+          {topAusentes.length > 0 && (
+            <div className="card p-5">
+              <h3 className="text-sm font-semibold text-slate-700 mb-1">Top ausencias</h3>
+              <p className="text-xs text-slate-400 mb-4">Participantes con más inasistencias en el período</p>
+              <div className="space-y-2">
+                {topAusentes.map((p, i) => {
+                  const pctPresente = Math.round((p.presentes / p.total) * 100);
+                  return (
+                    <div key={p.nombre} className="flex items-center gap-3">
+                      <span className={[
+                        "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0",
+                        i === 0 ? "bg-red-100 text-red-600" :
+                        i === 1 ? "bg-orange-100 text-orange-600" :
+                        i === 2 ? "bg-amber-100 text-amber-600" :
+                        "bg-slate-100 text-slate-500",
+                      ].join(" ")}>
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 text-sm text-slate-700 truncate">{p.nombre}</span>
+                      <span className="text-xs text-red-600 font-medium w-16 text-right shrink-0">
+                        {p.ausentes} ausencia{p.ausentes !== 1 ? "s" : ""}
+                      </span>
+                      <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden shrink-0">
+                        <div
+                          className="h-full bg-emerald-500 rounded-full"
+                          style={{ width: `${pctPresente}%` }}
+                        />
+                      </div>
+                      <span className="text-xs text-slate-400 w-8 text-right shrink-0">
+                        {pctPresente}%
                       </span>
                     </div>
                   );

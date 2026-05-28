@@ -59,7 +59,7 @@ export default function Asistencia() {
         Nota: f.Nota,
         SituacionEspecifica: "",
         Extras: "",
-        NoCidi: "",
+        NoMatricula: "",
       })),
     });
     Alert.alert("✅ Guardado", `${filas.filter(f => f.Asistencia === "Sí").length} presentes guardados.`);
@@ -78,7 +78,15 @@ export default function Asistencia() {
           )}
         </View>
         {filas.length > 0 && (
-          <Button label="Guardar" size="sm" onPress={handleGuardar} loading={guardar.isPending} />
+          <View style={styles.headerBtns}>
+            <Button
+              label="✅ Todos"
+              size="sm"
+              variant="secondary"
+              onPress={() => setFilas((prev) => prev.map((f) => ({ ...f, Asistencia: "Sí" })))}
+            />
+            <Button label="Guardar" size="sm" onPress={handleGuardar} loading={guardar.isPending} />
+          </View>
         )}
       </View>
 
@@ -148,6 +156,7 @@ const styles = StyleSheet.create({
     padding: spacing["2xl"], borderBottomWidth: 1, borderBottomColor: colors.border,
     backgroundColor: colors.surface,
   },
+  headerBtns:   { flexDirection: "row", gap: spacing.sm, alignItems: "center" },
   title:        { fontSize: fontSize.lg, fontWeight: "700", color: colors.text },
   counter:      { fontSize: fontSize.xs, color: colors.textMuted, marginTop: 2 },
   diasRow:      { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, padding: spacing.lg },

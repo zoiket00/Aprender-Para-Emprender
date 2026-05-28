@@ -125,6 +125,14 @@ export default function Asistencia() {
                 className="w-36"
               />
             )}
+            {filas.length > 0 && (
+              <button
+                onClick={() => setFilas((prev) => prev.map((f) => ({ ...f, Asistencia: "Sí" })))}
+                className="h-9 rounded-lg px-3 text-sm font-medium bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 transition-colors"
+              >
+                ✅ Todos presentes
+              </button>
+            )}
             <Button
               onClick={handleGuardar}
               loading={guardar.isPending}

@@ -46,6 +46,10 @@ export default function TabsLayout() {
         name="participantes"
         options={{ title: "Participantes", tabBarIcon: () => <Icon emoji="👶" /> }}
       />
+      <Tabs.Screen
+        name="historial"
+        options={{ title: "Historial", tabBarIcon: () => <Icon emoji="🕐" /> }}
+      />
     </Tabs>
   );
 }
