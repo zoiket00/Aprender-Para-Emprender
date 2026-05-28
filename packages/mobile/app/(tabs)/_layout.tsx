@@ -1,16 +1,11 @@
 import { Tabs, router } from "expo-router";
 import { useEffect } from "react";
+import { Text } from "react-native";
 import { useAuthStore } from "@/store/auth";
 import { colors } from "@/theme";
 
-function TabIcon({ name, focused }: { name: string; focused: boolean }) {
-  const icons: Record<string, { active: string; inactive: string }> = {
-    index:          { active: "🏠", inactive: "🏠" },
-    asistencia:     { active: "📋", inactive: "📋" },
-    dashboard:      { active: "📊", inactive: "📊" },
-    participantes:  { active: "👶", inactive: "👶" },
-  };
-  return null; // usamos emoji en tabBarLabel
+function Icon({ emoji }: { emoji: string }) {
+  return <Text style={{ fontSize: 20 }}>{emoji}</Text>;
 }
 
 export default function TabsLayout() {
@@ -37,19 +32,19 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="index"
-        options={{ title: "Inicio", tabBarIcon: ({ focused }) => null }}
+        options={{ title: "Inicio", tabBarIcon: () => <Icon emoji="🏠" /> }}
       />
       <Tabs.Screen
         name="asistencia"
-        options={{ title: "Asistencia", tabBarIcon: () => null }}
+        options={{ title: "Asistencia", tabBarIcon: () => <Icon emoji="📋" /> }}
       />
       <Tabs.Screen
         name="dashboard"
-        options={{ title: "Dashboard", tabBarIcon: () => null }}
+        options={{ title: "Dashboard", tabBarIcon: () => <Icon emoji="📊" /> }}
       />
       <Tabs.Screen
         name="participantes"
-        options={{ title: "Participantes", tabBarIcon: () => null }}
+        options={{ title: "Participantes", tabBarIcon: () => <Icon emoji="👶" /> }}
       />
     </Tabs>
   );
