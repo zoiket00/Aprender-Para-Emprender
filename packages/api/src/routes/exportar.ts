@@ -1,28 +1,10 @@
 import { Router } from "express";
 import XLSX from "xlsx";
 import { supabase } from "../config/supabase.js";
+import { getOrgMember } from "../utils/org.js";
 import type { DatosExtra } from "@ape/shared";
 
 const router = Router();
-
-async function getOrgId(userId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from("miembros_org")
-    .select("org_id")
-    .eq("usuario_id", userId)
-    .single();
-  return data?.org_id ?? null;
-}
-
-async function getOrgRole(userId: string, orgId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from("miembros_org")
-    .select("rol")
-    .eq("usuario_id", userId)
-    .eq("org_id", orgId)
-    .single();
-  return data?.rol ?? null;
-}
 
 function fromDbEstado(s: string): string {
   const map: Record<string, string> = {
@@ -43,16 +25,17 @@ router.get("/", async (req, res) => {
     return;
   }
 
-  const orgId = await getOrgId(req.user!.id);
-  if (!orgId) { res.status(403).json({ error: "Sin organización asignada" }); return; }
+  // getOrgMember devuelve orgId + rol en una sola query cacheada
+  const member = await getOrgMember(req.user!.id);
+  if (!member) { res.status(403).json({ error: "Sin organización asignada" }); return; }
 
-  const rol = await getOrgRole(req.user!.id, orgId);
-  if (!rol || !["propietario", "admin", "coordinador"].includes(rol)) {
+  if (!["propietario", "admin", "coordinador"].includes(member.rol)) {
     res.status(403).json({ error: "Solo admin y coordinador pueden exportar registros" });
     return;
   }
 
-  // Traer sesiones en el rango de fechas
+  const { orgId } = member;
+
   let sessionQuery = supabase
     .from("sesiones_asistencia")
     .select("id, fecha, grupos!inner(nombre, programas!inner(org_id, nombre))")

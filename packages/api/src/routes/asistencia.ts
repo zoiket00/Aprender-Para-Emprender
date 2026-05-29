@@ -1,5 +1,6 @@
 import { Router } from "express";
 import { supabase } from "../config/supabase.js";
+import { getOrgId } from "../utils/org.js";
 import { findCanonical } from "../utils/fuzzy.js";
 import {
   GuardarAsistenciaSchema,
@@ -14,20 +15,10 @@ const router = Router();
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-async function getOrgId(userId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from("miembros_org")
-    .select("org_id")
-    .eq("usuario_id", userId)
-    .single();
-  return data?.org_id ?? null;
-}
-
 function normalizarDia(dia: string): string {
   return dia.normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
 }
 
-// Mapea asistencia del UI (español) → estado DB (español)
 function toDbEstado(s: string): "presente" | "ausente" | "justificado" | "tarde" {
   const map: Record<string, "presente" | "ausente" | "justificado" | "tarde"> = {
     "Sí":          "presente",
@@ -39,7 +30,6 @@ function toDbEstado(s: string): "presente" | "ausente" | "justificado" | "tarde"
   return map[s] ?? "ausente";
 }
 
-// Mapea estado DB → texto UI (español)
 function fromDbEstado(s: string): string {
   const map: Record<string, string> = {
     presente:    "Sí",
@@ -135,7 +125,6 @@ router.get("/", async (req, res) => {
       nota:                 rec["nota"] ?? "",
       extras:               info["extras"] ?? "",
       no_matricula:         info["no_matricula"] ?? p["codigo"] ?? "",
-      // Aliases para compatibilidad con el dashboard
       NombreBebe:    p["nombre_completo"] ?? "",
       NombreMadre:   extra.nombre_madre ?? "",
       Asistencia:    fromDbEstado(String(rec["estado"] ?? "ausente")),
@@ -165,22 +154,29 @@ router.post("/guardar", guardarLimiter, async (req, res) => {
   const orgId = await getOrgId(req.user!.id);
   if (!orgId) { res.status(403).json({ error: "Sin organización asignada" }); return; }
 
-  // Buscar grupo del día
-  const { data: grupo } = await supabase
-    .from("grupos")
-    .select("id, programas!inner(org_id)")
-    .eq("nombre", dia)
-    .eq("programas.org_id", orgId)
-    .maybeSingle();
+  // Obtener grupo y catálogo en paralelo
+  const [grupoResult, catalogResult] = await Promise.all([
+    supabase
+      .from("grupos")
+      .select("id, programas!inner(org_id)")
+      .eq("nombre", dia)
+      .eq("programas.org_id", orgId)
+      .maybeSingle(),
+    supabase
+      .from("participantes")
+      .select("id, nombre_completo, datos_extra")
+      .eq("org_id", orgId)
+      .is("eliminado_en", null),
+  ]);
 
-  if (!grupo) {
+  if (!grupoResult.data) {
     res.status(400).json({ error: `No existe grupo configurado para el día: ${dia}` });
     return;
   }
 
-  const grupoId = (grupo as Record<string, unknown>)["id"] as string;
+  const grupoId = (grupoResult.data as Record<string, unknown>)["id"] as string;
 
-  // Upsert sesión (una por grupo por día)
+  // Upsert sesión
   const { data: sesion, error: sError } = await supabase
     .from("sesiones_asistencia")
     .upsert(
@@ -197,15 +193,8 @@ router.post("/guardar", guardarLimiter, async (req, res) => {
 
   const sesionId = (sesion as Record<string, unknown>)["id"] as string;
 
-  // Catálogo para fuzzy matching
-  const { data: catalog } = await supabase
-    .from("participantes")
-    .select("id, nombre_completo, datos_extra")
-    .eq("org_id", orgId)
-    .is("eliminado_en", null);
-
   interface CatEntry { nombre_bebe: string; nombre_madre: string; id: string }
-  const cat: CatEntry[] = (catalog ?? []).map((p) => {
+  const cat: CatEntry[] = (catalogResult.data ?? []).map((p) => {
     const extra = ((p as Record<string, unknown>)["datos_extra"] ?? {}) as DatosExtra;
     return {
       nombre_bebe:  String((p as Record<string, unknown>)["nombre_completo"] ?? ""),
@@ -214,34 +203,42 @@ router.post("/guardar", guardarLimiter, async (req, res) => {
     };
   });
 
-  let guardados = 0;
-  let omitidos  = 0;
+  // Fuzzy matching en memoria → construir array de upserts (sin I/O)
+  let omitidos = 0;
+  const upsertRows: object[] = [];
 
   for (const r of registros.filter((r) => r.NombreBebe?.trim())) {
     const canonical = findCanonical(r.NombreBebe, r.NombreMadre ?? "", cat) as CatEntry | null;
     if (!canonical) { omitidos++; continue; }
 
-    const { error: recError } = await supabase
-      .from("registros_asistencia")
-      .upsert(
-        {
-          sesion_id:      sesionId,
-          participante_id: canonical.id,
-          estado:          toDbEstado(r.Asistencia ?? "No"),
-          nota:            r.Nota ?? "",
-          info_extra: {
-            ubicacion:            r.Ubicacion ?? "",
-            reporte:              r.Reporte ?? "No",
-            situacion_especifica: r.SituacionEspecifica ?? "",
-            extras:               r.Extras ?? "",
-            no_matricula:         r.NoMatricula ?? "",
-          },
-          registrado_por: req.user!.id,
-        },
-        { onConflict: "sesion_id,participante_id" }
-      );
+    upsertRows.push({
+      sesion_id:       sesionId,
+      participante_id: canonical.id,
+      estado:          toDbEstado(r.Asistencia ?? "No"),
+      nota:            r.Nota ?? "",
+      info_extra: {
+        ubicacion:            r.Ubicacion ?? "",
+        reporte:              r.Reporte ?? "No",
+        situacion_especifica: r.SituacionEspecifica ?? "",
+        extras:               r.Extras ?? "",
+        no_matricula:         r.NoMatricula ?? "",
+      },
+      registrado_por: req.user!.id,
+    });
+  }
 
-    if (recError) { omitidos++; } else { guardados++; }
+  // Un solo batch upsert en lugar de N queries individuales
+  let guardados = 0;
+  if (upsertRows.length > 0) {
+    const { error: batchError } = await supabase
+      .from("registros_asistencia")
+      .upsert(upsertRows, { onConflict: "sesion_id,participante_id" });
+
+    if (batchError) {
+      omitidos += upsertRows.length;
+    } else {
+      guardados = upsertRows.length;
+    }
   }
 
   res.json({ ok: true, guardados, omitidos });
@@ -269,7 +266,6 @@ router.delete("/dia", async (req, res) => {
 
   if (!grupo) { res.status(404).json({ error: "Grupo no encontrado" }); return; }
 
-  // Al eliminar la sesión se eliminan los registros en cascada
   const { error } = await supabase
     .from("sesiones_asistencia")
     .delete()

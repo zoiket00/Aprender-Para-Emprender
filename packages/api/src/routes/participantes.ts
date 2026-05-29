@@ -1,20 +1,10 @@
 import { Router } from "express";
 import { supabase } from "../config/supabase.js";
+import { getOrgId } from "../utils/org.js";
 import { ParticipanteSchema, ParticipanteUpdateSchema, DIAS_VALIDOS } from "@ape/shared";
 import type { DatosExtra } from "@ape/shared";
 
 const router = Router();
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-async function getOrgId(userId: string): Promise<string | null> {
-  const { data } = await supabase
-    .from("miembros_org")
-    .select("org_id")
-    .eq("usuario_id", userId)
-    .single();
-  return data?.org_id ?? null;
-}
 
 function normalizarDia(dia: string): string {
   return dia.normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
